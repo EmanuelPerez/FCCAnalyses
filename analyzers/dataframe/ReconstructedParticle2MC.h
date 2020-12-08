@@ -11,6 +11,9 @@
 #include "podio/ObjectID.h"
 #include "TLorentzVector.h"
 
+#include "MCParticle.h"
+
+
 
 /// Return the D0 of a track to a reconstructed particle
 ROOT::VecOps::RVec<float> getRP2MC_p (ROOT::VecOps::RVec<int> recin,
@@ -79,6 +82,18 @@ struct getRP2MC_p_func {
 					 ROOT::VecOps::RVec<int> mcin,
 					 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,
 					 ROOT::VecOps::RVec<edm4hep::MCParticleData> mc);
+};
+
+struct selMuons_JPsimatch {
+  selMuons_JPsimatch(int arg_dum);
+  int m_dummy = 1;
+  std::vector<edm4hep::ReconstructedParticleData> operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc, ROOT::VecOps::RVec<int> mcdaughters) ;
+};
+
+struct selRP_PDG {
+  selRP_PDG(int arg_PDG);
+  int m_PDG = 13 ;
+  std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) ;
 };
 
 #endif

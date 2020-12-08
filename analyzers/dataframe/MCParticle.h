@@ -28,6 +28,14 @@ struct selMC_genStatus {
   ROOT::VecOps::RVec<edm4hep::MCParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::MCParticleData> in);
 };
 
+/// select MCParticles with their PDG id
+struct selMC_PDG {
+  selMC_PDG(int arg_pdg, bool arg_chargeconjugate);
+  int m_pdg = 13;
+  bool m_chargeconjugate = true;
+  std::vector<edm4hep::MCParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::MCParticleData> in);
+};
+
 /// get MC history tree for a given generator status
 struct getMC_tree{
   getMC_tree(int arg_status);
@@ -124,6 +132,13 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> mergeParticles(ROOT::VecOps::RVec<ed
 
 /// return the size of the input collection
 int getMC_n(ROOT::VecOps::RVec<edm4hep::MCParticleData> in);
+
+
+// --- stuff for scale stability study :
+
+std::vector<int> list_of_stable_particles_from_decay( int i, ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
+
+std::vector< std::array<int, 2> > get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
 
 
 #endif

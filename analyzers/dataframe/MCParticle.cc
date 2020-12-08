@@ -259,6 +259,23 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData>  selMC_genStatus::operator() (ROOT::
   return result;
 }
 
+selMC_PDG::selMC_PDG(int arg_pdg, bool arg_chargeconjugate) : m_pdg(arg_pdg), m_chargeconjugate( arg_chargeconjugate )  {};
+
+std::vector<edm4hep::MCParticleData>  selMC_PDG::operator() (ROOT::VecOps::RVec<edm4hep::MCParticleData> in) {
+  std::vector<edm4hep::MCParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    auto & p = in[i];
+    if ( m_chargeconjugate ) {
+      	if ( std::abs( p.PDG ) == std::abs( m_pdg)  ) result.emplace_back(p);
+    }
+    else {
+	if ( p.PDG == m_pdg ) result.emplace_back(p);
+    }
+  }
+  return result;
+}
+
 
 getMC_decay::getMC_decay(int arg_mother, int arg_daughters, bool arg_inf){m_mother=arg_mother; m_daughters=arg_daughters; m_inf=arg_inf;};
 bool getMC_decay::operator() (ROOT::VecOps::RVec<edm4hep::MCParticleData> in,  ROOT::VecOps::RVec<int> ind){
@@ -316,3 +333,118 @@ ROOT::VecOps::RVec<ROOT::VecOps::RVec<int>> getMC_tree::operator() (ROOT::VecOps
   }
   return result;
 }
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<int> list_of_stable_particles_from_decay( int i, ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) {
+  std::vector<int> res;
+
+	// could maybe use getMC_tree above, but for the while, the latter
+	// looks like work in progress
+
+  // i = index of a MC particle in the Particle block
+  // in = the Particle collection
+  // ind = the block with the indices for the daughters, Particle#1.index
+
+  // returns a vector with the indices (in the Particle block) of the stable daughters of the particle i
+
+  int db = in.at(i).daughters_begin ;
+  int de = in.at(i).daughters_end;
+  if ( db != de ) {// particle is unstable
+    int d1 = ind[db] ;
+    int d2 = ind[de-1];
+    for (int idaughter = d1; idaughter <= d2; idaughter++) {
+      std::vector<int> rr = list_of_stable_particles_from_decay( idaughter, in, ind) ;
+      res.insert( res.end(), rr.begin(), rr.end() );
+    }
+  }
+  else {    // particle is stable
+     res.push_back( i ) ;
+     return res ;
+  }
+  return res;
+}
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------
+
+std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) {
+
+// Returns a vector of array<int, 2>  :
+//    size of the vector = number of JPsis in this event
+//    the array contains the indices of the mu- and the mu+,in this order
+
+   //std::cout << "    enter in get_MC_muons_from_JPsis " << std::endl;
+   std::vector< std::array<int, 2> >  result;
+
+   std::vector<int> theJPsis ;	  // contains the indices of the JPsis in the MCParticleblock
+
+   for ( int i=0; i < in.size(); i++){
+     int pdg = in[i].PDG ;
+     if ( pdg == 443 ){		// that's the JPsi code
+        theJPsis.push_back( i );
+     }
+   }
+   int nJPsi = theJPsis.size();	   // number of JPsis in this event
+   bool JPsi = ( nJPsi >= 1);
+
+//	std::cout << "    nJPsi = " << nJPsi << std::endl;
+
+   if ( ! JPsi ) return result;
+
+   ///if ( nJPsi > 1 ) std::cout << " -- more than 1 JPsi : " << nJPsi << std::endl;
+
+   // debug :
+            /*
+ *    for( int i=0; i < in.size(); i++){
+ *          std::string here="";
+ *          if ( in[i].PDG == 443 ) here ="   ---   here is a JPsi " ;
+ *          int db = in.at(i).daughters_begin ;
+ *          int de = in.at(i).daughters_end;
+ *          if ( db != de ) {
+ *                std::cout << i << " pdg: " << in[i].PDG << " decay products from " << ind[db] << " to " << ind[de-1] << here << std::endl;
+ *          }
+ *          else {
+ *                std::cout << i << " pdg: " << in[i].PDG << " is stable " << here << std::endl ;
+ *          }
+ *    }
+ *    
+ */
+
+   std::vector<int> allMuonsFromJPsis;  // that is used to handle potential duplicates
+					// (e.g. a JPsi that comes itself from a  JPsi with a different status code)
+
+   for( int i=0; i < theJPsis.size(); i++) {   // loop over the JPsis
+
+     std::array<int, 2> resu;
+     resu[0] = -1;
+     resu[1] = -1;
+
+     int ijp = theJPsis[i] ;
+
+     std::vector<int> products = list_of_stable_particles_from_decay( ijp, in, ind ) ;
+
+     for ( int j=0; j < products.size(); ++j) {	   // did the JPsi decay into muons ?
+        int idx = products[j] ;
+        //std::cout << "     decay product : " << in[idx].PDG << std::endl ;
+        if (in[idx].PDG == 13) resu[0] = idx ;
+        if (in[idx].PDG == -13) resu[1] = idx;
+     }
+
+     // to remove potential duplicated J/Psis :
+     if(std::find(allMuonsFromJPsis.begin(), allMuonsFromJPsis.end(), resu[0]) != allMuonsFromJPsis.end()) {
+	continue;  	// skip this JPsi
+     }
+     else {
+	allMuonsFromJPsis.push_back( resu[0] );
+        allMuonsFromJPsis.push_back( resu[1] );
+        result.push_back( resu );
+     }
+
+   }  /// end loop over the JPsis
+
+    //std::cout  << "    exit get_MC_muons_from_JPsis " << std::endl;
+   return result;
+}
+

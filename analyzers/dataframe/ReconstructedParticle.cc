@@ -1,5 +1,93 @@
 #include "ReconstructedParticle.h"
 
+// -- Build dimuon objects from a collection of RecoParticles
+Dimuons::Dimuons() { }
+std::vector<edm4hep::ReconstructedParticleData> Dimuons::operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs) {
+  std::vector<edm4hep::ReconstructedParticleData> result;
+  int n = legs.size();
+  if (n >1) {
+/*
+    ROOT::VecOps::RVec<bool> v(n);
+    std::fill(v.end() - 2, v.end(), true);
+    do {
+      edm4hep::ReconstructedParticleData reso;
+      //reso.pdg = m_resonance_pdgid;
+      TLorentzVector reso_lv;
+      for (int i = 0; i < n; ++i) {
+          if (v[i]) {
+            reso.charge += legs[i].charge;
+            TLorentzVector leg_lv;
+            leg_lv.SetXYZM(legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, legs[i].mass);
+            reso_lv += leg_lv;
+          }
+      }
+      reso.momentum.x = reso_lv.Px();
+      reso.momentum.y = reso_lv.Py();
+      reso.momentum.z = reso_lv.Pz();
+      reso.mass = reso_lv.M();
+      result.emplace_back(reso);
+    } while (std::next_permutation(v.begin(), v.end()));
+*/
+   edm4hep::ReconstructedParticleData reso;
+   TLorentzVector reso_lv;
+   for (int i=0; i < n; i++) {
+      TLorentzVector leg1 ;
+      leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, legs[i].mass);
+      for (int j=i+1; j < n; j++) {
+         edm4hep::ReconstructedParticleData reso;
+         TLorentzVector reso_lv;
+         TLorentzVector leg2;
+         leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, legs[j].mass);
+         reso.charge = legs[i].charge + legs[j].charge ;
+         reso_lv = leg1+ leg2;
+         reso.momentum.x = reso_lv.Px();
+         reso.momentum.y = reso_lv.Py();
+         reso.momentum.z = reso_lv.Pz();
+         reso.mass = reso_lv.M();
+         result.emplace_back(reso);
+      }
+   }
+  }
+  return result;
+}
+
+
+JPsis::JPsis() { } 
+std::vector<edm4hep::ReconstructedParticleData> JPsis::operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> muons_from_JPsis) {
+
+// input = the muons from selMuons_JPsimatch
+// by construction, pairs shouldbe made from muons 0 and 1, (2 and 3) etc,in case > 1 JPsi
+
+  std::vector<edm4hep::ReconstructedParticleData> result;
+
+  int n = muons_from_JPsis.size();
+  int nJ = n /2;	// number of JPsis to be built
+
+  for (int i=0; i < nJ; i++) {
+     int i1 = i*2 ;
+     int i2 = i1 + 1;
+     TLorentzVector reso_lv;
+     edm4hep::ReconstructedParticleData reso;
+     reso.charge = muons_from_JPsis[i1].charge + muons_from_JPsis[i2].charge ;
+     TLorentzVector leg1 ;
+     leg1.SetXYZM( muons_from_JPsis[i1].momentum.x, muons_from_JPsis[i1].momentum.y, muons_from_JPsis[i1].momentum.z, muons_from_JPsis[i1].mass);
+     TLorentzVector leg2 ;
+     leg2.SetXYZM( muons_from_JPsis[i2].momentum.x, muons_from_JPsis[i2].momentum.y, muons_from_JPsis[i2].momentum.z, muons_from_JPsis[i].mass);
+     reso_lv = leg1 + leg2;
+
+      reso.momentum.x = reso_lv.Px();
+      reso.momentum.y = reso_lv.Py();
+      reso.momentum.z = reso_lv.Pz();
+      reso.mass = reso_lv.M();
+      result.emplace_back(reso);
+
+  }  // end loop over the JPsis
+  return result;
+
+}
+
+
+
 
 //TOBEMOVED LATER
 ResonanceBuilder::ResonanceBuilder(int arg_resonance_pdgid, float arg_resonance_mass) {m_resonance_pdgid = arg_resonance_pdgid; m_resonance_mass = arg_resonance_mass;}
@@ -212,6 +300,21 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  selRP_pT::operator() (RO
   for (size_t i = 0; i < in.size(); ++i) {
     auto & p = in[i];
     if (std::sqrt(std::pow(p.momentum.x,2) + std::pow(p.momentum.y,2)) > m_min_pt) {
+      result.emplace_back(p);
+    }
+  }
+  return result;
+}
+
+
+selRP_E::selRP_E(float arg_min_e) : m_min_e(arg_min_e) {};
+
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  selRP_E::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    auto & p = in[i];
+    if ( p.energy > m_min_e) {
       result.emplace_back(p);
     }
   }

@@ -10,6 +10,16 @@
 #include "edm4hep/ReconstructedParticleData.h"
 
 
+struct JPsis {
+   JPsis() ;
+   std::vector<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> muons_from_JPsis) ;
+};
+
+struct Dimuons {
+  Dimuons();
+  std::vector<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs);
+};
+
 /// TO BE MOVED LATER
 struct ResonanceBuilder {
   int m_resonance_pdgid;
@@ -30,6 +40,13 @@ struct selRP_pT {
   float m_min_pt = 20; //> transverse momentum threshold [GeV]
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
 };
+
+struct selRP_E {
+  selRP_E(float arg_min_e);
+  float m_min_e = 2; //> energy threshold [GeV]
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+};
+
 
 /// return reconstructed particles
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> getRP(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);

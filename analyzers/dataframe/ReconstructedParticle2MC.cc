@@ -139,3 +139,73 @@ ROOT::VecOps::RVec<float>  getRP2MC_p_func::operator() (ROOT::VecOps::RVec<int> 
   }
   return result;
 }
+
+
+
+
+// -------------------------------------------------------------------------------------------------
+
+// -- select RecoParticles associated with MC muons
+// -- ( for muons from JPsi, can not use the Muon collection because it oontains
+// -- only the isolated muons)
+
+selRP_PDG::selRP_PDG( int arg_pdg ): m_PDG(arg_pdg) {} ;
+std::vector<edm4hep::ReconstructedParticleData>  selRP_PDG::operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
+
+  std::vector<edm4hep::ReconstructedParticleData> result;
+
+  for (int i=0; i<recind.size();i++) {
+      int reco_idx = recind.at(i);
+      int mc_idx = mcind.at(i);
+      int pdg = mc.at(mc_idx).PDG ;
+      if ( std::abs( pdg ) == std::abs( m_PDG)  ) {
+         result.push_back( reco.at( reco_idx ) ) ;
+      }
+  }
+  return result;
+}
+
+
+// -- select the reco'ed particles associated with MC muons that come from the
+// -- decay of a J/Psi
+
+selMuons_JPsimatch::selMuons_JPsimatch( int arg_dum ) : m_dummy(arg_dum) {};
+    
+std::vector<edm4hep::ReconstructedParticleData> selMuons_JPsimatch::operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc, ROOT::VecOps::RVec<int> mcdaughters) {
+    
+  std::vector<edm4hep::ReconstructedParticleData> result;
+  std::vector< std::array<int, 2> >  MCmuons_from_JPsis = get_MC_muons_from_JPsis( mc, mcdaughters) ;
+  int nJPsis = MCmuons_from_JPsis.size() ;
+
+  if ( nJPsis <1) return result ;
+
+
+  for( int ijpsi=0; ijpsi < nJPsis; ijpsi ++) {
+
+      std::array<int, 2>  MCmuons_JPsi = MCmuons_from_JPsis[ ijpsi ] ;
+      if (MCmuons_JPsi[0]<0 || MCmuons_JPsi[1]<0) continue;
+
+      int nlegs =0;
+      for (int i=0; i<recind.size();i++) {
+          int reco_idx = recind.at(i);
+          int mc_idx = mcind.at(i);
+          if ( mc_idx == MCmuons_JPsi[0] || mc_idx == MCmuons_JPsi[1]) {
+             result.push_back( reco.at( reco_idx ) ) ;	 
+             nlegs ++;
+          }
+      }
+
+      if ( nlegs == 1 ) {   // one of the muons from this JPsi didnot make a RecoParticle
+			    // e.g. outside of the tracker acceptance
+			    // in which case, remove the other leg if it was found
+	result.pop_back() ;
+      }
+
+  }  // loop over the JPsis
+
+  return result;
+}
+
+
+
+
