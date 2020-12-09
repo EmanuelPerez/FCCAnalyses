@@ -44,7 +44,7 @@ struct selRP_pT {
 struct selRP_E {
   selRP_E(float arg_min_e);
   float m_min_e = 2; //> energy threshold [GeV]
-  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+  std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
 };
 
 
@@ -92,6 +92,8 @@ ROOT::VecOps::RVec<TLorentzVector> getRP_tlv(ROOT::VecOps::RVec<edm4hep::Reconst
 
 /// concatenate both input vectors and return the resulting vector
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> mergeParticles(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> x, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> y);
+
+std::vector<edm4hep::ReconstructedParticleData> my_mergeParticles(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> x, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> y);
 
 /// return the size of the input collection
 int getRP_n(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);

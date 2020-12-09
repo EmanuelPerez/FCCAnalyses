@@ -1,4 +1,7 @@
 #include "ReconstructedParticle2MC.h"
+//#include <CLHEP/Random/RandFlat.h>
+#include <random>
+#include <chrono>
 
 ROOT::VecOps::RVec<float> getRP2MC_p(ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
   ROOT::VecOps::RVec<float> result;
@@ -164,6 +167,49 @@ std::vector<edm4hep::ReconstructedParticleData>  selRP_PDG::operator() (ROOT::Ve
   }
   return result;
 }
+
+
+// -- Fake Muons :
+// -- Randomly select RecoParticles  associated with a Kaon or a Pion as Muons,
+// -- according to a given fake rate (misid efficiency)
+
+selRP_FakeMuons::selRP_FakeMuons( float arg_fakeRate ) : m_fakeRate(arg_fakeRate) {
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine generator (seed);
+  m_generator = generator;
+  std::uniform_real_distribution<float> flatdis(0.,1.); 
+  m_flat.param( flatdis.param() );
+  ///std::cout << " ... constructor of selRP_FakeMuons fr = " << arg_fakeRate << std::endl;
+};
+std::vector<edm4hep::ReconstructedParticleData> selRP_FakeMuons::operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
+
+  std::vector<edm4hep::ReconstructedParticleData> result;
+
+  for (int i=0; i<recind.size();i++) {
+      int reco_idx = recind.at(i);
+      int mc_idx = mcind.at(i);
+      int pdg = mc.at(mc_idx).PDG ;
+      // only consider charged reco'ed particles :
+      if ( reco.at( reco_idx ).charge == 0 ) continue;
+      float energy = reco.at( reco_idx ).energy ;
+      // the energy should be at least 2 GeV  to reach the muon station
+      if ( energy < 2.) continue;
+      if ( std::abs( pdg  ) == 11 ) continue;
+      if ( std::abs( pdg  ) == 13 ) continue;
+      // apply fake rate  to  all charged particles that are not matched
+      /// to a MC muon or electron
+      //if ( std::abs( pdg ) == 211 || std::abs( pdg ) == 321 ) {
+         //float arandom = CLHEP::RandFlat::shoot( 0., 1.) ;
+         float arandom =  m_flat (m_generator );
+          //std::cout << " random = " << arandom  << std::endl;
+         if ( arandom <= m_fakeRate) {
+           result.push_back( reco.at( reco_idx ) ) ;
+         }
+      //}
+  }
+  return result;
+}
+
 
 
 // -- select the reco'ed particles associated with MC muons that come from the

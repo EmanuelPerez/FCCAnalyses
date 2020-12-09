@@ -35,7 +35,7 @@ class analysis():
     #__________________________________________________________
     def run(self):
         
-        #df2 = (self.df.Range(10000)
+        #df2 = (self.df.Range(1000)
         df2 = (self.df
 
                #.Alias("Muon0", "Muon#0.index")
@@ -54,6 +54,26 @@ class analysis():
                .Define("dimuons",         "Dimuons()(muons)")
                .Define("dimuons_mass",    "getRP_mass(dimuons)")
                .Define("dimuons_charge",    "getRP_charge(dimuons)")
+
+               # fake muons, with two hypotheses for the fake rate:
+               .Define("fakeMuons_1em3",  "selRP_FakeMuons(1e-3)(MCRecoAssociations0,MCRecoAssociations1,ReconstructedParticles,Particle)")
+               .Define("fakeMuons_1em2",  "selRP_FakeMuons(1e-2)(MCRecoAssociations0,MCRecoAssociations1,ReconstructedParticles,Particle)")
+               .Define("fakeMuons_5em2",  "selRP_FakeMuons(5e-2)(MCRecoAssociations0,MCRecoAssociations1,ReconstructedParticles,Particle)")
+
+               .Define("muons_with_fakes_1em3",  "my_mergeParticles( muons, fakeMuons_1em3)")
+               .Define("muons_with_fakes_1em2",  "my_mergeParticles( muons, fakeMuons_1em2)")
+               .Define("muons_with_fakes_5em2",  "my_mergeParticles( muons, fakeMuons_5em2)")
+               # make all dimuon combinations, alsoincluding now the fake muons
+               .Define("dimuons_with_fakes_1em3",  "Dimuons()(muons_with_fakes_1em3)")
+               .Define("dimuons_with_fakes_1em2",  "Dimuons()(muons_with_fakes_1em2)")
+               .Define("dimuons_with_fakes_5em2",  "Dimuons()(muons_with_fakes_5em2)")
+
+               .Define("dimuons_with_fakes_1em3_mass",  "getRP_mass(dimuons_with_fakes_1em3)")
+               .Define("dimuons_with_fakes_1em3_charge",  "getRP_charge(dimuons_with_fakes_1em3)")
+               .Define("dimuons_with_fakes_1em2_mass",  "getRP_mass(dimuons_with_fakes_1em2)")
+               .Define("dimuons_with_fakes_1em2_charge",  "getRP_charge(dimuons_with_fakes_1em2)")
+               .Define("dimuons_with_fakes_5em2_mass",  "getRP_mass(dimuons_with_fakes_5em2)")
+               .Define("dimuons_with_fakes_5em2_charge",  "getRP_charge(dimuons_with_fakes_5em2)")
 
                # keep only the combination closest in mass to the JPsi:
                #.Define("dimuons_3p2",   "ResonanceBuilder(23, 3.2)(muons)")
@@ -79,17 +99,29 @@ class analysis():
         branchList = ROOT.vector('string')()
         for branchName in [
 
-                #"MCmuons",
                 #"muons",
-                "dimuons",
+                #"dimuons",
                 "dimuons_mass",
                 "dimuons_charge",
+                #"dimuons_with_fakes_1em3",
+                #"dimuons_with_fakes_1em2",
+                #"dimuons_with_fakes_5em2",
+                "dimuons_with_fakes_1em3_mass",
+                "dimuons_with_fakes_1em3_charge",
+                "dimuons_with_fakes_1em2_mass",
+                "dimuons_with_fakes_1em2_charge",
+                "dimuons_with_fakes_5em2_mass",
+                "dimuons_with_fakes_5em2_charge",
+                #"fakeMuons_1em3",
+                #"fakeMuons_1em2",
+                #"muons_with_fakes_1em2",
+                #"muons_with_fakes_1em3",
                 #"MCmuons_theta",
                 #"muonsIdx_from_JPsi",
                 #"muons_pt",
-                "muons_from_JPsi",
-                "muons_from_JPsi_pt",
-                "jpsi",
+                #"muons_from_JPsi",
+                #"muons_from_JPsi_pt",
+                #"jpsi",
                 "jpsi_mass",
                 "jpsi_charge"
                 

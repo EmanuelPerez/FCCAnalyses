@@ -13,6 +13,8 @@
 
 #include "MCParticle.h"
 
+#include <random>
+
 
 
 /// Return the D0 of a track to a reconstructed particle
@@ -95,5 +97,15 @@ struct selRP_PDG {
   int m_PDG = 13 ;
   std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) ;
 };
+
+struct selRP_FakeMuons  {
+  selRP_FakeMuons( float arg_fakeRate) ;
+  float m_fakeRate = 1e-3 ;  // in per-mil
+  std::default_random_engine m_generator;
+  std::uniform_real_distribution<float> m_flat;
+  std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) ;
+};
+
+
 
 #endif

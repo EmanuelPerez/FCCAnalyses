@@ -28,16 +28,22 @@ std::vector<edm4hep::ReconstructedParticleData> Dimuons::operator()(ROOT::VecOps
       result.emplace_back(reso);
     } while (std::next_permutation(v.begin(), v.end()));
 */
+   float muon_mass = 0.106 ; 
+	// the muon mass is hardcoded below instead of using the mass of the recoed particles,
+	// because this is  used too  for fake (Pi, K's) muons.
+
    edm4hep::ReconstructedParticleData reso;
    TLorentzVector reso_lv;
    for (int i=0; i < n; i++) {
       TLorentzVector leg1 ;
-      leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, legs[i].mass);
+      //leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, legs[i].mass);
+      leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, muon_mass );
       for (int j=i+1; j < n; j++) {
          edm4hep::ReconstructedParticleData reso;
          TLorentzVector reso_lv;
          TLorentzVector leg2;
-         leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, legs[j].mass);
+         //leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, legs[j].mass);
+         leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, muon_mass );
          reso.charge = legs[i].charge + legs[j].charge ;
          reso_lv = leg1+ leg2;
          reso.momentum.x = reso_lv.Px();
@@ -164,6 +170,19 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> mergeParticles(ROOT::VecO
   result.insert( result.end(), y.begin(), y.end() );
   return ROOT::VecOps::RVec(result);
 }
+
+
+// wih the mergeParticles above, no  collection  is written to the ntuple ??
+std::vector<edm4hep::ReconstructedParticleData> my_mergeParticles(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> x, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> y) {
+      std::vector<edm4hep::ReconstructedParticleData> result;
+  //std::cout << " enter in my_mergeParticles sizes = " << x.size() << " " << y.size() <<  std::endl;
+  result.reserve(x.size() + y.size());
+  result.insert( result.end(), x.begin(), x.end() );
+  result.insert( result.end(), y.begin(), y.end() );
+  //std::cout << " size of the merged collection " << result.size() <<  std::endl;
+  return result;
+}
+
 
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> getRP(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in){
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
@@ -309,8 +328,8 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  selRP_pT::operator() (RO
 
 selRP_E::selRP_E(float arg_min_e) : m_min_e(arg_min_e) {};
 
-ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  selRP_E::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
-  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+std::vector<edm4hep::ReconstructedParticleData>  selRP_E::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  std::vector<edm4hep::ReconstructedParticleData> result;
   result.reserve(in.size());
   for (size_t i = 0; i < in.size(); ++i) {
     auto & p = in[i];
