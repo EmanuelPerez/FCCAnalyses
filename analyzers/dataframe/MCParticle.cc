@@ -369,7 +369,18 @@ std::vector<int> list_of_stable_particles_from_decay( int i, ROOT::VecOps::RVec<
 
 // ----------------------------------------------------------------------------------------------------------------------------------
 
-std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) {
+get_MC_legs_from_mothers::get_MC_legs_from_mothers( int pdg_mother, int pdg_daughter1, int pdg_daughter2) {
+  m_pdg_mother = pdg_mother;
+  m_pdg_daughter1 = pdg_daughter1;
+  m_pdg_daughter2 = pdg_daughter2;
+} ;
+
+//std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) {
+
+std::vector< std::array<int, 2> > get_MC_legs_from_mothers::operator() ( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) {
+
+// Example : pdg_mother = 443 ( mother = JPsi )
+//           pdg_daughter1 = 13, pdg_daughter2 = -13 (muons)
 
 // Returns a vector of array<int, 2>  :
 //    size of the vector = number of JPsis in this event
@@ -382,7 +393,7 @@ std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<e
 
    for ( int i=0; i < in.size(); i++){
      int pdg = in[i].PDG ;
-     if ( pdg == 443 ){		// that's the JPsi code
+     if ( pdg == m_pdg_mother ){		// that's the JPsi code
         theJPsis.push_back( i );
      }
    }
@@ -424,12 +435,32 @@ std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<e
      int ijp = theJPsis[i] ;
 
      std::vector<int> products = list_of_stable_particles_from_decay( ijp, in, ind ) ;
+     if ( products.size() != 2 ) continue;
+
+     bool pass = ( in [ products[0]].PDG == m_pdg_daughter1 && in [ products[1]].PDG == m_pdg_daughter2 )  ||
+		 ( in [ products[0]].PDG == m_pdg_daughter2 && in [ products[1]].PDG == m_pdg_daughter1 ) ;
+     if ( ! pass ) continue;
+
+     //std::cout << " a D0 that decayed into " << in [ products[0]].PDG << " and " << in [ products[1]].PDG << std::endl;
+     int n1 = 0;
+     int n2 = 0;
 
      for ( int j=0; j < products.size(); ++j) {	   // did the JPsi decay into muons ?
         int idx = products[j] ;
         //std::cout << "     decay product : " << in[idx].PDG << std::endl ;
-        if (in[idx].PDG == 13) resu[0] = idx ;
-        if (in[idx].PDG == -13) resu[1] = idx;
+        if (in[idx].PDG == m_pdg_daughter1) {
+		resu[0] = idx ;
+		n1 ++;
+	}
+        if (in[idx].PDG == m_pdg_daughter2) {
+		resu[1] = idx;
+		n2 ++;
+	}
+        if ( in[idx].PDG == m_pdg_daughter1 || in[idx].PDG == m_pdg_daughter2) {
+	   TLorentzVector leg1 ;
+           leg1.SetXYZM( in[idx].momentum.x, in[idx].momentum.y, in[idx].momentum.z, in[idx].mass );
+           //std::cout << " a MC leg mass = " << in[idx].mass << " pT = " << leg1.Pt() << " theta = " << leg1.Theta() << " eta = " << leg1.Eta() << " phi = " << leg1.Phi() << std::endl;
+        }
      }
 
      // to remove potential duplicated J/Psis :
@@ -437,6 +468,7 @@ std::vector< std::array<int, 2> >  get_MC_muons_from_JPsis( ROOT::VecOps::RVec<e
 	continue;  	// skip this JPsi
      }
      else {
+
 	allMuonsFromJPsis.push_back( resu[0] );
         allMuonsFromJPsis.push_back( resu[1] );
         result.push_back( resu );

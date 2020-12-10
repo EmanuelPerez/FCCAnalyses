@@ -9,15 +9,26 @@
 #include "ROOT/RVec.hxx"
 #include "edm4hep/ReconstructedParticleData.h"
 
+#include <random>
+#include <chrono>
 
 struct JPsis {
    JPsis() ;
    std::vector<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> muons_from_JPsis) ;
 };
 
+/*
 struct Dimuons {
   Dimuons();
   std::vector<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs);
+};
+*/
+
+struct Pairs {
+  Pairs( bool same) ;
+  float m_same;
+  std::vector<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs1,
+						             ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs2);
 };
 
 /// TO BE MOVED LATER
@@ -47,6 +58,22 @@ struct selRP_E {
   std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
 };
 
+
+struct  selRP_mass {
+  selRP_mass( float arg_mass_min, float arg_mass_max) ;
+  float m_mass_min = 0. ;
+  float m_mass_max = 10. ;
+  std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+};
+
+struct selRP_Fakes {
+  selRP_Fakes( float arg_fakeRate, float  arg_mass );
+  float m_fakeRate = 1e-3;
+  float m_mass = 0.106;  // muon mass
+  std::default_random_engine m_generator;
+  std::uniform_real_distribution<float> m_flat;
+  std::vector<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+};
 
 /// return reconstructed particles
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> getRP(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);

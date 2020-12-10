@@ -138,7 +138,14 @@ int getMC_n(ROOT::VecOps::RVec<edm4hep::MCParticleData> in);
 
 std::vector<int> list_of_stable_particles_from_decay( int i, ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
 
-std::vector< std::array<int, 2> > get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
+//std::vector< std::array<int, 2> > get_MC_muons_from_JPsis( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
 
+struct get_MC_legs_from_mothers{
+  get_MC_legs_from_mothers( int pdg_mother, int pdg_daughter1, int pdg_daughter2) ;
+  int m_pdg_mother = 443;
+  int m_pdg_daughter1 = 13;
+  int m_pdg_daughter2 = -13;
+  std::vector< std::array<int, 2> > operator() ( ROOT::VecOps::RVec<edm4hep::MCParticleData> in, ROOT::VecOps::RVec<int> ind) ;
+};
 
 #endif

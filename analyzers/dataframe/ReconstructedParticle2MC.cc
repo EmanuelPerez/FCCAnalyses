@@ -152,7 +152,7 @@ ROOT::VecOps::RVec<float>  getRP2MC_p_func::operator() (ROOT::VecOps::RVec<int> 
 // -- ( for muons from JPsi, can not use the Muon collection because it oontains
 // -- only the isolated muons)
 
-selRP_PDG::selRP_PDG( int arg_pdg ): m_PDG(arg_pdg) {} ;
+selRP_PDG::selRP_PDG( int arg_pdg, bool arg_chargedOnly ): m_PDG(arg_pdg), m_chargedOnly(arg_chargedOnly)  {} ;
 std::vector<edm4hep::ReconstructedParticleData>  selRP_PDG::operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
 
   std::vector<edm4hep::ReconstructedParticleData> result;
@@ -161,6 +161,9 @@ std::vector<edm4hep::ReconstructedParticleData>  selRP_PDG::operator() (ROOT::Ve
       int reco_idx = recind.at(i);
       int mc_idx = mcind.at(i);
       int pdg = mc.at(mc_idx).PDG ;
+      if ( m_chargedOnly ) {
+        if ( reco.at( reco_idx ).charge ==0 ) continue;
+      }
       if ( std::abs( pdg ) == std::abs( m_PDG)  ) {
          result.push_back( reco.at( reco_idx ) ) ;
       }
@@ -168,6 +171,29 @@ std::vector<edm4hep::ReconstructedParticleData>  selRP_PDG::operator() (ROOT::Ve
   return result;
 }
 
+// -------------------------------------------------------------------------------------------------
+
+// -- select RecoParticles associated with a charged hadron :
+// -- take all charged RecoParticles that are not associated with  a MC lepton
+
+std::vector<edm4hep::ReconstructedParticleData> selRP_ChargedHadrons (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
+
+  std::vector<edm4hep::ReconstructedParticleData> result;
+
+  for (int i=0; i<recind.size();i++) {
+      int reco_idx = recind.at(i);
+      int mc_idx = mcind.at(i);
+      int pdg = mc.at(mc_idx).PDG ;
+      if ( reco.at( reco_idx ).charge == 0 ) continue;
+      if ( std::abs( pdg ) == 11 || std::abs( pdg ) == 13 || std::abs( pdg ) == 15 ) continue ;
+      result.push_back( reco.at( reco_idx ) ) ;
+  }
+
+  return result;
+}
+
+
+// -------------------------------------------------------------------------------------------------
 
 // -- Fake Muons :
 // -- Randomly select RecoParticles  associated with a Kaon or a Pion as Muons,
@@ -211,16 +237,27 @@ std::vector<edm4hep::ReconstructedParticleData> selRP_FakeMuons::operator() (ROO
 }
 
 
+// -------------------------------------------------------------------------------------------------
 
 // -- select the reco'ed particles associated with MC muons that come from the
 // -- decay of a J/Psi
 
-selMuons_JPsimatch::selMuons_JPsimatch( int arg_dum ) : m_dummy(arg_dum) {};
+/// selMuons_JPsimatch::selMuons_JPsimatch( int arg_dum ) : m_dummy(arg_dum) {};
+
+selMuons_JPsimatch::selMuons_JPsimatch( int pdg_mother, int pdg_daughter1, int pdg_daughter2) {
+  m_pdg_mother = pdg_mother;
+  m_pdg_daughter1 = pdg_daughter1;
+  m_pdg_daughter2 = pdg_daughter2;
+} ;
+
     
 std::vector<edm4hep::ReconstructedParticleData> selMuons_JPsimatch::operator() (ROOT::VecOps::RVec<int> recind, ROOT::VecOps::RVec<int> mcind, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,  ROOT::VecOps::RVec<edm4hep::MCParticleData> mc, ROOT::VecOps::RVec<int> mcdaughters) {
+
     
   std::vector<edm4hep::ReconstructedParticleData> result;
-  std::vector< std::array<int, 2> >  MCmuons_from_JPsis = get_MC_muons_from_JPsis( mc, mcdaughters) ;
+  //std::vector< std::array<int, 2> >  MCmuons_from_JPsis = get_MC_muons_from_JPsis( mc, mcdaughters) ;
+  //std::vector< std::array<int, 2> >  MCmuons_from_JPsis = get_MC_legs_from_mothers( 443, 13, -13)( mc, mcdaughters) ;
+  std::vector< std::array<int, 2> >  MCmuons_from_JPsis = get_MC_legs_from_mothers( m_pdg_mother, m_pdg_daughter1, m_pdg_daughter2)( mc, mcdaughters) ;
   int nJPsis = MCmuons_from_JPsis.size() ;
 
   if ( nJPsis <1) return result ;
@@ -234,6 +271,8 @@ std::vector<edm4hep::ReconstructedParticleData> selMuons_JPsimatch::operator() (
       int nlegs =0;
       for (int i=0; i<recind.size();i++) {
           int reco_idx = recind.at(i);
+          // keep only charged particles
+          if ( reco.at( reco_idx ).charge == 0 ) continue;
           int mc_idx = mcind.at(i);
           if ( mc_idx == MCmuons_JPsi[0] || mc_idx == MCmuons_JPsi[1]) {
              result.push_back( reco.at( reco_idx ) ) ;	 

@@ -1,11 +1,23 @@
 #include "ReconstructedParticle.h"
 
 // -- Build dimuon objects from a collection of RecoParticles
-Dimuons::Dimuons() { }
-std::vector<edm4hep::ReconstructedParticleData> Dimuons::operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs) {
+//Dimuons::Dimuons() { }
+//std::vector<edm4hep::ReconstructedParticleData> Dimuons::operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs) {
+
+Pairs::Pairs( bool same) { 
+   m_same = same;
+}
+
+std::vector<edm4hep::ReconstructedParticleData> Pairs::operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs1,
+                                                                    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> legs2) {
   std::vector<edm4hep::ReconstructedParticleData> result;
-  int n = legs.size();
-  if (n >1) {
+  int n1 = legs1.size();
+  int n2 = legs2.size();
+  //std::cout << " in pairs  : n1 = " << n1 << " n2 = " << n2 << std::endl;
+
+  int n1_min = 1;
+  if ( m_same) n1_min = 2;
+  if (n1 >= n1_min ) {
 /*
     ROOT::VecOps::RVec<bool> v(n);
     std::fill(v.end() - 2, v.end(), true);
@@ -28,29 +40,35 @@ std::vector<edm4hep::ReconstructedParticleData> Dimuons::operator()(ROOT::VecOps
       result.emplace_back(reso);
     } while (std::next_permutation(v.begin(), v.end()));
 */
-   float muon_mass = 0.106 ; 
+   // float muon_mass = 0.106 ; 
 	// the muon mass is hardcoded below instead of using the mass of the recoed particles,
 	// because this is  used too  for fake (Pi, K's) muons.
 
    edm4hep::ReconstructedParticleData reso;
    TLorentzVector reso_lv;
-   for (int i=0; i < n; i++) {
+   for (int i=0; i < n1; i++) {
       TLorentzVector leg1 ;
       //leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, legs[i].mass);
-      leg1.SetXYZM( legs[i].momentum.x, legs[i].momentum.y, legs[i].momentum.z, muon_mass );
-      for (int j=i+1; j < n; j++) {
-         edm4hep::ReconstructedParticleData reso;
-         TLorentzVector reso_lv;
+      leg1.SetXYZM( legs1[i].momentum.x, legs1[i].momentum.y, legs1[i].momentum.z, legs1[i].mass);
+      int  jmin = i+1;
+      int  jmax = n1;
+      if ( ! m_same ) {
+         jmin = 0; 
+         jmax = n2 ;
+      }
+      for (int j=jmin; j < jmax; j++) {
          TLorentzVector leg2;
          //leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, legs[j].mass);
-         leg2.SetXYZM( legs[j].momentum.x, legs[j].momentum.y, legs[j].momentum.z, muon_mass );
-         reso.charge = legs[i].charge + legs[j].charge ;
+         leg2.SetXYZM( legs2[j].momentum.x, legs2[j].momentum.y, legs2[j].momentum.z, legs2[j].mass );
+         reso.charge = legs1[i].charge + legs2[j].charge ;
          reso_lv = leg1+ leg2;
          reso.momentum.x = reso_lv.Px();
          reso.momentum.y = reso_lv.Py();
          reso.momentum.z = reso_lv.Pz();
          reso.mass = reso_lv.M();
          result.emplace_back(reso);
+         //std::cout << " Leg1: mass = " << legs1[i].mass << " charge = " << legs1[i].charge << std::endl;
+         //std::cout << " Leg2: mass = " << legs2[j].mass << " charge = " << legs2[j].charge << std::endl;
       }
    }
   }
@@ -78,8 +96,12 @@ std::vector<edm4hep::ReconstructedParticleData> JPsis::operator()(ROOT::VecOps::
      TLorentzVector leg1 ;
      leg1.SetXYZM( muons_from_JPsis[i1].momentum.x, muons_from_JPsis[i1].momentum.y, muons_from_JPsis[i1].momentum.z, muons_from_JPsis[i1].mass);
      TLorentzVector leg2 ;
-     leg2.SetXYZM( muons_from_JPsis[i2].momentum.x, muons_from_JPsis[i2].momentum.y, muons_from_JPsis[i2].momentum.z, muons_from_JPsis[i].mass);
+     leg2.SetXYZM( muons_from_JPsis[i2].momentum.x, muons_from_JPsis[i2].momentum.y, muons_from_JPsis[i2].momentum.z, muons_from_JPsis[i2].mass);
      reso_lv = leg1 + leg2;
+     ///std::cout <<" masses of the JPsi legs = " << muons_from_JPsis[i1].mass << " " << muons_from_JPsis[i2].mass << std::endl;
+
+     //std::cout << " in JPsis: leg1 mass = " << muons_from_JPsis[i1].mass << " charge " <<  muons_from_JPsis[i1].charge  << std::endl;
+     //std::cout << " in JPsis: leg2 mass = " << muons_from_JPsis[i2].mass << " charge " <<  muons_from_JPsis[i2].charge  << std::endl;
 
       reso.momentum.x = reso_lv.Px();
       reso.momentum.y = reso_lv.Py();
@@ -91,7 +113,6 @@ std::vector<edm4hep::ReconstructedParticleData> JPsis::operator()(ROOT::VecOps::
   return result;
 
 }
-
 
 
 
@@ -337,6 +358,54 @@ std::vector<edm4hep::ReconstructedParticleData>  selRP_E::operator() (ROOT::VecO
       result.emplace_back(p);
     }
   }
+  return result;
+}
+
+selRP_mass::selRP_mass( float arg_mass_min, float  arg_mass_max) : m_mass_min( arg_mass_min ), m_mass_max( arg_mass_max ) { } ;
+std::vector<edm4hep::ReconstructedParticleData> selRP_mass::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  std::vector<edm4hep::ReconstructedParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    auto & p = in[i];
+    if ( p.mass > m_mass_min  && p.mass < m_mass_max) {
+      result.emplace_back(p);
+    }
+  }
+  return result;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+
+// -- Fakes, more general :
+// -- Randomly select RecoParticles according to a given fake rate (misid efficiency)
+
+selRP_Fakes::selRP_Fakes( float arg_fakeRate, float  arg_mass ) : m_fakeRate(arg_fakeRate), m_mass( arg_mass)  {
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine generator (seed);
+  m_generator = generator;
+  std::uniform_real_distribution<float> flatdis(0.,1.);
+  m_flat.param( flatdis.param() );
+};
+
+std::vector<edm4hep::ReconstructedParticleData> selRP_Fakes::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+
+  std::vector<edm4hep::ReconstructedParticleData> result;
+
+  for (size_t i = 0; i < in.size(); ++i) {
+    auto & p = in[i];
+    float arandom =  m_flat (m_generator );
+    if ( arandom <= m_fakeRate) {
+       edm4hep::ReconstructedParticleData reso;
+       reso.momentum.x = p.momentum.x ;
+       reso.momentum.y = p.momentum.y ;
+       reso.momentum.z = p.momentum.z ;
+       reso.mass = m_mass;
+       reso.charge = p.charge;
+       result.push_back( reso );
+    }
+  }
+
   return result;
 }
 
