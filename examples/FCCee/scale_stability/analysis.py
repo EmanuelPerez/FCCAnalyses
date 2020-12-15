@@ -174,6 +174,8 @@ class analysis():
                 #"D0",
                 "D0_mass",
                 "D0_charge",
+                #"KPi_from_D0",
+                #"KPi_from_D0bar",
                 #"D0cand_in_massWindow_mass"
                 "D0cand_mass",
                 "D0cand_charge",
