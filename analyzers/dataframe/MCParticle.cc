@@ -683,6 +683,29 @@ ROOT::VecOps::RVec<edm4hep::Vector3d> getMC_decayVertex::operator() ( ROOT::VecO
 }
 
 
+// --------------------------------------------------------------------------------------------------
+
+ROOT::VecOps::RVec<float> AngleBetweenTwoMCParticles( ROOT::VecOps::RVec<edm4hep::MCParticleData> p1, ROOT::VecOps::RVec<edm4hep::MCParticleData> p2 ) {
+
+  ROOT::VecOps::RVec<float> result;
+  if ( p1.size() != p2.size() ) {
+	std::cout << "  !!! in AngleBetweenTwoMCParticles: the arguments p1 and p2 should have the same size " << std::endl;
+	return result;
+  }
+
+  for (int i=0; i < p1.size(); i++) {
+     TVector3 q1( p1[i].momentum.x, p1[i].momentum.y, p1[i].momentum.z );
+     TVector3 q2( p2[i].momentum.x, p2[i].momentum.y, p2[i].momentum.z );
+     float delta = fabs( q1.Angle( q2 ) ) ;
+     result.push_back( delta );
+  }
+ 
+  return result;
+
+}
+
+
+
 
 
 

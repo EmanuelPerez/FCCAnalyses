@@ -159,11 +159,13 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState( RO
            covMatrix[icov] = 0;
         }
         // diagonal terms: take error = 5% of the parameter
-        covMatrix[0] = pow( 0.05 * track_param[0] ,2);
-        covMatrix[5] = pow( 0.05 * track_param[1] , 2);
-        covMatrix[9] = pow( 0.05 * track_param[2] , 2) ;
-        covMatrix[12] = pow( 0.05 * track_param[3] , 2);
-        covMatrix[14] = pow( 0.05* track_param[4] , 2);
+        float arbitrary_value = 0.05 ;
+	//float arbitrary_value = 2.;   // 200% !!
+        covMatrix[0] = pow( arbitrary_value * track_param[0] ,2);
+        covMatrix[5] = pow( arbitrary_value * track_param[1] , 2);
+        covMatrix[9] = pow( arbitrary_value * track_param[2] , 2) ;
+        covMatrix[12] = pow( arbitrary_value * track_param[3] , 2);
+        covMatrix[14] = pow( arbitrary_value* track_param[4] , 2);
         track.covMatrix = covMatrix;
 
         result.push_back( track );
@@ -286,6 +288,11 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState_wit
     	    param_base[3] = track.Z0 ;
     	    param_base[4] = track.tanLambda ;
 
+        if (isample == 0) {
+	std::cout << "  a Ds leg D0 (mum)  = " << 1e3 * track.D0 << std::endl;
+        std::cout << "  a Ds leg Z0 (mum)  = " << 1e3 * track.Z0 << std::endl;
+        }
+
 	    edm4hep::TrackState modified_track = track;
 
 	    // modify the track parameters according to their covariance matrix
@@ -383,6 +390,13 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState_wit
   //std::cout << " D0 : " << central_param[0] << std::endl;
   //std::cout << " D0 from the samples " << sum[0] << std::endl;
   //std::cout << " D0 variance from the samples = " << sumsq[0] << std::endl;
+    /*
+   for (int i=0; i < 5; i++) {
+       float error = sqrt( sumsq[i] ) ;
+       float rel_error = error / central_param[i] ;
+	std::cout << " relative uncertainty on param " << i << " amounts to " << 100.*rel_error << " % " << std::endl;
+   }
+   */
 
   edm4hep::TrackState the_final_Ds = ReconstructedDs_atVertex_TrackState[0];
   // set up its covariance matrix :

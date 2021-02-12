@@ -67,10 +67,19 @@ class analysis():
                # the MC bachelor K- from the Bs decay :
                .Define("BachelorK",  "selMC_leg(2) ( Bs2DsK_indices, Particle )")
 
+	       # the angle between the MC Ds and the MC K
+               .Define("Angle_DsK",  "AngleBetweenTwoMCParticles( Ds, BachelorK ) ")
+
                # The MC legs from the Ds decay
                .Define("Kplus",   "selMC_leg(1) ( Bs2KKPiK_indices, Particle )")
                .Define("Kminus",   "selMC_leg(2) ( Bs2KKPiK_indices, Particle )")
                .Define("Piplus",   "selMC_leg(3) ( Bs2KKPiK_indices, Particle )")
+
+	       # their energies
+               .Define("Kplus_E",  "getMC_e( Kplus )")
+               .Define("Kminus_E",  "getMC_e( Kminus )")
+	       .Define("Piplus_E",   "getMC_e( Piplus )")
+
 
                # the Ds kinematics 
                .Define("Ds_E",  "getMC_e( Ds )")
@@ -81,6 +90,7 @@ class analysis():
                # the bachelor K kinematics
                .Define("BachelorK_E",  "getMC_e( BachelorK )")
                .Define("BachelorK_theta",  "getMC_theta( BachelorK )")
+               .Define("BachelorK_phi",  "getMC_phi( BachelorK )")
 
                # Decay vertex of the Ds
                # This takes the production vertex of the 1st non mother particle in Bs2KKPiK_indices, i.e.
@@ -163,6 +173,12 @@ class analysis():
                # This is the final Bs vertex
                .Define("BsVertex_Cov",  "get_VertexData( BsVertexObject_Cov )")
 
+               .Define("Kplus_phi",  "getMC_phi( Kplus )")
+               .Define("RecoKplus_phi",  "getRP_phi( RecoKplus ) " )
+               .Define("RecoKplus_atVertex_phi", "getRP_phi( RecoKplus_atVertex ) ")
+               
+
+
         )
 
 
@@ -180,6 +196,7 @@ class analysis():
                 "Ds_phi",
                 "BachelorK_E",
                 "BachelorK_theta",
+	        "BachelorK_phi",
                 #"Kplus",
                 #"Kminus",
                 #"Piplus",
@@ -205,8 +222,14 @@ class analysis():
                 "BsVertex",
                 "n_BsTracks",
                 #"RecoDs_atVertex_TrackState_Cov"
-                "BsVertex_Cov"
-
+                "BsVertex_Cov",
+                "Kplus_phi",
+                "RecoKplus_phi",
+                "RecoKplus_atVertex_phi",
+	        "Angle_DsK",
+		"Kplus_E",
+		"Kminus_E",
+		"Piplus_E"
                 ]:
             branchList.push_back(branchName)
         df2.Snapshot("events", self.outname, branchList)

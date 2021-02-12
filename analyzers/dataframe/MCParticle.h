@@ -150,6 +150,8 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> mergeParticles(ROOT::VecOps::RVec<ed
 /// return the size of the input collection
 int getMC_n(ROOT::VecOps::RVec<edm4hep::MCParticleData> in);
 
+/// angle (3D) between two MCParticles:
+ROOT::VecOps::RVec<float> AngleBetweenTwoMCParticles( ROOT::VecOps::RVec<edm4hep::MCParticleData> p1, ROOT::VecOps::RVec<edm4hep::MCParticleData> p2 );
 
 /// return the event primary vertex  (mm)
 struct getMC_EventPrimaryVertex {

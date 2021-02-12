@@ -46,7 +46,11 @@ class analysis():
                .Define("MC_DecayVertices",  "getMC_endPoint( Particle, Particle1)" )
 
                # MC indices of the decay Bs -> JPsi Phi
-               #.Define("Bs2JPsiPhi_indices",   "getMC_indices_ExclusiveDecay( 531, {443,333}) ( Particle, Particle1)" )
+               .Define("Bs2JPsiPhi_indices",   "getMC_indices_ExclusiveDecay( 531, {443,333}, false, true) ( Particle, Particle1)" )
+	       .Define("JPsi",   "selMC_leg( 1) ( Bs2JPsiPhi_indices , Particle )")
+               .Define("Phi",   "selMC_leg( 2) ( Bs2JPsiPhi_indices , Particle )")
+	       .Define("Angle_JpsiPhi",  "AngleBetweenTwoMCParticles( JPsi, Phi)" )
+
 
                # MC indices of the decay Bs -> mu+ mu- K+ K-
                #     - if the event contains > 1 such decays, the first one is kept
@@ -226,6 +230,8 @@ class analysis():
                 "RecoKplus_atVertex_phi",
                 "RecoKminus_atVertex_theta",
                 "RecoKminus_atVertex_phi",
+
+                "Angle_JpsiPhi"
 
 
                 ]:

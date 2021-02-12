@@ -129,6 +129,8 @@ TMatrixDSym get_trackCov( edm4hep::TrackState &  atrack) {
     double scale3 = 1e-3 ;
     double scale4 = 1.;
 
+  scale2 = -scale2 ;   // sign of omega
+
     // Same units and definitions as Franco :
     //scale0= 1.;
     //scale2 = 1.;
@@ -850,6 +852,8 @@ FCCAnalysesVertex  VertexFitter_Tk( int Primary, ROOT::VecOps::RVec<edm4hep::Tra
         double scale3 = 1e-3 ;  //convert mm to m
         double scale4 = 1.;
 
+        scale2 = -scale2 ;   // sign of omega (sign convention)
+
         for (Int_t i = 0; i < Ntr; i++) {
 
 		edm4hep::TrackState t = tracks[i] ;
@@ -884,7 +888,7 @@ FCCAnalysesVertex  VertexFitter_Tk( int Primary, ROOT::VecOps::RVec<edm4hep::Tra
 
 		   updated_track_momentum_at_vertex.push_back( ptrack_at_vertex );
 
-			// back rto FCCSW units...
+			// back to EDM4HEP units...
 			par[0] = par[0] / scale0 ;
                         par[1] = par[1] / scale1 ;
                         par[2] = par[2] / scale2 ;
