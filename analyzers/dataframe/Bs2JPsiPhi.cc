@@ -81,9 +81,12 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> selRP_leg_atVertex::opera
 				ROOT::VecOps::RVec<edm4hep::TrackState> tracks) {
 
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> res;
+
   if ( BsRecoParticles.size() == 0 || m_idx > BsRecoParticles.size() ) {
      return res;
   }
+
+  if ( BsDecayVertex.ntracks <= 1 ) return  res;   // no genuine vertex could be reco'ed
 
   // the updated momenta of the tracks used in the verte fit :
   ROOT::VecOps::RVec< TVector3 >  updated_track_momentum_at_vertex = BsDecayVertex.updated_track_momentum_at_vertex ;
