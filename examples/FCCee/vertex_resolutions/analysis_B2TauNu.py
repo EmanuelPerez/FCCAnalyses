@@ -232,8 +232,8 @@ class analysis():
             branchList.push_back(branchName)
         df2.Snapshot("events", self.outname, branchList)
 
-# python examples/FCCee/vertex_resolutions/analysis_Bc2TauNu.py "/eos/experiment/fcc/ee/generation/DelphesEvents/fcc_tmp_v02/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU/events_13*" events_Bc2TauNuTAUHADNU.root
-# python examples/FCCee/vertex_resolutions/analysis_Bc2TauNu.py "/eos/experiment/fcc/ee/generation/DelphesEvents/fcc_tmp_v02/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU/events_130*" events_Bu2TauNuTAUHADNU_test.root
+# python examples/FCCee/vertex_resolutions/analysis_B2TauNu.py "/eos/experiment/fcc/ee/generation/DelphesEvents/fcc_tmp_v02/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU/events_13*" events_Bc2TauNuTAUHADNU.root
+# python examples/FCCee/vertex_resolutions/analysis_B2TauNu.py "/eos/experiment/fcc/ee/generation/DelphesEvents/fcc_tmp_v02/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU/events_13*" events_Bu2TauNuTAUHADNU_test.root
 
 if __name__ == "__main__":
 
