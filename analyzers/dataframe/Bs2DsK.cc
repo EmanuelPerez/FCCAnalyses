@@ -18,7 +18,8 @@ ROOT::VecOps::RVec<int>  getMC_indices_Ds2KKPi ( ROOT::VecOps::RVec<int> Bs2DsK_
 
  //std::cout << " ... in getMC_indices_Ds2KKPi, found a Bs to Ds K " << std::endl;
 
- int idx_Ds = Bs2DsK_indices[1];  // by construction, the Ds is the 
+ int idx_Ds = Bs2DsK_indices[1];  // by construction  ( [0] = index of the mpther Bs )
+
  // get the indices of the Ds+ daughters :
  std::vector<int> pdg_daughters = { 321, -321, 211 } ;  //  K+, K-, Pi+
  bool stable = true;    // look among the list of *stable* daughters of the Ds+
@@ -28,6 +29,11 @@ ROOT::VecOps::RVec<int>  getMC_indices_Ds2KKPi ( ROOT::VecOps::RVec<int> Bs2DsK_
  if ( Ds_daughters.size() != 4 ) return result;   // this is not the decay searched for. Return an empty vector
 
  //std::cout << " ... Found the Ds daughters " << std::endl;
+ //check:
+ //std::cout << " end of getMC_indices_Ds2KKPi " << std::endl;
+ //for (int i=0; i < Ds_daughters.size(); i++) {
+     //std::cout << " index = " << Ds_daughters[i] << " PDG = " << in.at( Ds_daughters[i] ).PDG << std::endl;
+ //}
 
  return Ds_daughters ;
 }
@@ -39,7 +45,8 @@ ROOT::VecOps::RVec<int>  getMC_indices_Bs2KKPiK ( ROOT::VecOps::RVec<int> Bs2DsK
 
 // returns a vector with the indices of the Bs, (K+ K- Pi+ ) ,  K- , in this order,
 // where the first 3 particles are the daughters from the Ds+
-// the input list, Bs2DsK_indices, contains the indices of: the Bs, the Ds+, the K- (in this order)
+// the input lists: Bs2DsK_indices  contains the indices of: the Bs, the Ds+, the K- (in this order)
+//                  Ds2KKPi_indices contains the indices of: the Ds+, the K+,K-, Pi+
 
  ROOT::VecOps::RVec<int>  result;
 
@@ -47,12 +54,22 @@ ROOT::VecOps::RVec<int>  getMC_indices_Bs2KKPiK ( ROOT::VecOps::RVec<int> Bs2DsK
  if ( Ds2KKPi_indices.size() != 4) return result;
 
  // Now fill in the indices:
+
  result.push_back(  Bs2DsK_indices[0] );   // the mother Bs
- for (auto & p : Ds2KKPi_indices ) {
-   result.push_back( p ) ;   // the Ds daughters
+
+ // the Ds daughters :
+ for (int i=1; i< Ds2KKPi_indices.size(); i++) {  // do not include the Ds !
+   result.push_back( Ds2KKPi_indices[i] );
  }
+
  result.push_back(  Bs2DsK_indices[2] );  // the bachelor K-
  //std::cout << " ... in getMC_indices_Bs2DsK, found all daughters " << std::endl;
+
+// check
+  //std::cout << " indices of getMC_indices_Bs2KKPiK " << std::endl;
+  //for (int i=0;i<  result.size(); i++) {
+    //std::cout << "index= " << result[i] << std::endl;
+  //}
 
  return result;
 
@@ -106,6 +123,9 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState( RO
 	ROOT::VecOps::RVec<edm4hep::MCParticleData> theMCDs, edm4hep::Vector3d  theMDsMCDecayVertex ) {
 
 // return a TrackState corresponding to the reco'ed Ds
+
+// The MC information, theMCDs and theMDsMCDecayVertex, is passed here only for debugging / check purposes
+
 
   ROOT::VecOps::RVec<edm4hep::TrackState > result;
   if ( theDss.size() != 1 ) return result;
@@ -288,10 +308,10 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState_wit
     	    param_base[3] = track.Z0 ;
     	    param_base[4] = track.tanLambda ;
 
-        if (isample == 0) {
-	std::cout << "  a Ds leg D0 (mum)  = " << 1e3 * track.D0 << std::endl;
-        std::cout << "  a Ds leg Z0 (mum)  = " << 1e3 * track.Z0 << std::endl;
-        }
+        //if (isample == 0) {
+	//std::cout << "  a Ds leg D0 (mum)  = " << 1e3 * track.D0 << std::endl;
+        //std::cout << "  a Ds leg Z0 (mum)  = " << 1e3 * track.Z0 << std::endl;
+        //}
 
 	    edm4hep::TrackState modified_track = track;
 
@@ -385,7 +405,7 @@ ROOT::VecOps::RVec<edm4hep::TrackState>  ReconstructedDs_atVertex_TrackState_wit
      sumsq[i] = sumsq[i] / ( nsamples - 1. );
   }
 
-  // print outs...
+  // printouts...
   //std::cout << " ---- end of ReconstructedDs_atVertex_TrackState_withCovariance " << std::endl;
   //std::cout << " D0 : " << central_param[0] << std::endl;
   //std::cout << " D0 from the samples " << sum[0] << std::endl;
